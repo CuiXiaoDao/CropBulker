@@ -4,4 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:GetROI">
 
+    <Application.Resources>
+        <SolidColorBrush x:Key="ContentBackground" Color="#1F1F1F"></SolidColorBrush>
+        <SolidColorBrush x:Key="IndexBackground" Color="#333333"></SolidColorBrush>
+    </Application.Resources>
 </Application>

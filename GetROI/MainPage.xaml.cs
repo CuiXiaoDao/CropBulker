@@ -1,24 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
 
 // “空白页”项模板在 http://go.microsoft.com/fwlink/?LinkId=234238 上有介绍
 
@@ -29,11 +20,12 @@ namespace GetROI
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        IReadOnlyList<StorageFile> fileList;
-        int count=0;
-        int totalImageNumber = 0;
-        BitmapImage handPicture = new BitmapImage();
-        StorageFolder clippedFolder;
+        private IReadOnlyList<StorageFile> fileList;
+        private int count, totalImageNumber;
+        private uint cropRegionWidth, cropRegionHeight, widthRatio, heightRatio;
+        private double imageScale=1;
+        private bool noMoreImage;
+        private StorageFolder clippedFolder;
 
         public MainPage()
         {
@@ -42,7 +34,7 @@ namespace GetROI
 
         private async void OpenPictureButton_Click(object sender, RoutedEventArgs e)
         {
-            // Clear previous returned folder name, if it exists, between iterations of this scenario           
+            // Clear previous returned folder name, if it exists, between iterations of this scenario
             FolderPicker folderPicker = new FolderPicker();
             folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
             folderPicker.FileTypeFilter.Add(".png");
@@ -58,109 +50,72 @@ namespace GetROI
                 totalImageNumber = fileList.Count;
                 count = 0;
                 await GotoNextHandGesture();
-                ////test
-                //StringBuilder outputText = new StringBuilder();
-                //outputText.AppendLine("Files:");
-                //foreach (StorageFile file in fileList)
-                //{
-                //    outputText.Append(file.Name + "\n");
-                //}
-                //OutputTextBlock.Text = outputText.ToString();
-                ////test end
-
             }
-            else
-            {
-                OutputTextBlock.Text = "Operation cancelled.";
-            }
-
         }
 
         private async void NextImage_Click(object sender, PointerRoutedEventArgs e)
         {
-            //if (fileList != null)
-            if (CropRegion.Visibility==Visibility.Visible)//CropRegion.Visibility相当于一个bool值，判断有误剩余图片
-            {              
-                var ptr = e.GetCurrentPoint(ContentGrid);
+            if (!noMoreImage)//判断有误剩余图片
+            {
+                var ptr = e.GetCurrentPoint(ContentCanvas);
                 if (ptr.Properties.IsLeftButtonPressed)
                 {
                     await SaveCroppedBitmapAsync();
-                }                   
+                }
                 await GotoNextHandGesture();
             }
             else
             {
-                OutputTextBlock.Text = "请先选择图片所在文件夹再进行裁剪";
+                OutputTextBlock.Text = "未选择图片所在文件夹或所选文件夹中图片已经全部截图";
             }
         }
 
-        async public Task SaveCroppedBitmapAsync()
+        private async Task SaveCroppedBitmapAsync()
         {
-            GeneralTransform gt = CropRegion.TransformToVisual(ContentGrid);
-            Point p = gt.TransformPoint(new Point(0, 0));
+            Point p = CropRegion.TransformToVisual(ContentCanvas).TransformPoint(new Point(0, 0));
 
             // Convert start point and size to integer.
-            uint startPointX = (uint)Math.Floor(p.X);
-            uint startPointY = (uint)Math.Floor(p.Y);
-            uint height = (uint)Math.Floor(CropRegion.Height);
-            uint width = (uint)Math.Floor(CropRegion.Width);
+            uint startPointX = (uint)Math.Floor(p.X * imageScale);
+            uint startPointY = (uint)Math.Floor(p.Y * imageScale);
 
             StorageFile originalImageFile = fileList[count - 1];
-            StorageFile newImageFile = await clippedFolder.CreateFileAsync(OutputTextBlock.Tag.ToString()+".jpg", CreationCollisionOption.GenerateUniqueName);
+            StorageFile newImageFile = await clippedFolder.CreateFileAsync(OutputTextBlock.Tag.ToString() + ".jpg", CreationCollisionOption.GenerateUniqueName);
 
             using (IRandomAccessStream originalImgFileStream = await originalImageFile.OpenReadAsync())
             {
-
-
-                // Create a decoder from the stream. With the decoder, we can get 
+                // Create a decoder from the stream. With the decoder, we can get
                 // the properties of the image.
                 BitmapDecoder decoder = await BitmapDecoder.CreateAsync(originalImgFileStream);
 
-                // Refine the start point and the size. 
-                if (startPointX + width > decoder.PixelWidth)
+                // Refine the start point and the size.
+                if (startPointX + cropRegionWidth > decoder.PixelWidth)
                 {
-                    startPointX = decoder.PixelWidth - width;
+                    startPointX = decoder.PixelWidth - cropRegionWidth;
                 }
 
-                if (startPointY + height > decoder.PixelHeight)
+                if (startPointY + cropRegionHeight > decoder.PixelHeight)
                 {
-                    startPointY = decoder.PixelHeight - height;
+                    startPointY = decoder.PixelHeight - cropRegionHeight;
                 }
 
                 // Get the cropped pixels.
-                byte[] pixels = await GetPixelData(decoder, startPointX, startPointY, width, height,
+                byte[] pixels = await GetPixelData(decoder, startPointX, startPointY, cropRegionWidth, cropRegionHeight,
                     decoder.PixelWidth, decoder.PixelHeight);
 
                 using (IRandomAccessStream newImgFileStream = await newImageFile.OpenAsync(FileAccessMode.ReadWrite))
                 {
-
-                    Guid encoderID = Guid.Empty;
-
-                    switch (newImageFile.FileType.ToLower())
-                    {
-                        case ".png":
-                            encoderID = BitmapEncoder.PngEncoderId;
-                            break;
-                        case ".bmp":
-                            encoderID = BitmapEncoder.BmpEncoderId;
-                            break;
-                        default:
-                            encoderID = BitmapEncoder.JpegEncoderId;
-                            break;
-                    }
-
                     // Create a bitmap encoder
 
                     BitmapEncoder bmpEncoder = await BitmapEncoder.CreateAsync(
-                        encoderID,
+                        BitmapEncoder.JpegEncoderId,
                         newImgFileStream);
 
                     // Set the pixel data to the cropped image.
                     bmpEncoder.SetPixelData(
                         BitmapPixelFormat.Bgra8,
                         BitmapAlphaMode.Straight,
-                        width,
-                        height,
+                        cropRegionWidth,
+                        cropRegionHeight,
                         decoder.DpiX,
                         decoder.DpiY,
                         pixels);
@@ -169,13 +124,11 @@ namespace GetROI
                     await bmpEncoder.FlushAsync();
                 }
             }
-
         }
 
-        async static private Task<byte[]> GetPixelData(BitmapDecoder decoder, uint startPointX, uint startPointY,
-    uint width, uint height, uint scaledWidth, uint scaledHeight)
+        private async static Task<byte[]> GetPixelData(BitmapDecoder decoder, uint startPointX, uint startPointY,
+            uint width, uint height, uint scaledWidth, uint scaledHeight)
         {
-
             BitmapTransform transform = new BitmapTransform();
             BitmapBounds bounds = new BitmapBounds();
             bounds.X = startPointX;
@@ -183,7 +136,6 @@ namespace GetROI
             bounds.Height = height;
             bounds.Width = width;
             transform.Bounds = bounds;
-
             transform.ScaledWidth = scaledWidth;
             transform.ScaledHeight = scaledHeight;
 
@@ -198,66 +150,112 @@ namespace GetROI
             return pixels;
         }
 
-
-        private async Task<bool> GotoNextHandGesture()
+        private async Task GotoNextHandGesture()
         {
-            if (count < totalImageNumber && totalImageNumber != 0)
+            if (count < totalImageNumber)
             {
-                CropRegion.Visibility = Visibility.Visible;
-                handGesture.Clip = null;
+                using (IRandomAccessStream imageStream = await fileList[count].OpenReadAsync())
+                {
+                    BitmapImage handPicture = new BitmapImage();
+                    handPicture.SetSource(imageStream);
+                    handGesture.Source = handPicture;
+                    
+                    if(handPicture.PixelHeight > ContentCanvas.ActualHeight || handPicture.PixelWidth > ContentCanvas.ActualWidth)
+                    {
+                        imageScale = Math.Max(handPicture.PixelHeight / ContentCanvas.ActualHeight, 
+                            handPicture.PixelWidth / ContentCanvas.ActualWidth);
+                        handGesture.Stretch = Windows.UI.Xaml.Media.Stretch.Uniform;
+                    }
+                    else
+                    {
+                        imageScale = 1;
+                        handGesture.Stretch = Windows.UI.Xaml.Media.Stretch.None;
+                    }
 
-                IRandomAccessStream imageStream = await fileList[count].OpenReadAsync();
-                handPicture.SetSource(imageStream);
-                //handPicture.UriSource = new Uri("ms-appx:///Assets/Logo.scale-100.png");
-                handGesture.Width = handPicture.PixelWidth;
-                handGesture.Height = handPicture.PixelHeight;
-                Canvas.SetLeft(handGesture, 0);
-                Canvas.SetTop(handGesture, 0);
+                }
 
-                handGesture.Source = handPicture;
-                ContentGrid.Width = handPicture.PixelWidth;
-                ContentGrid.Height = handPicture.PixelHeight;
-
-                OutputTextBlock.Text = "目前图片名称： " + fileList[count].Name;
+                OutputTextBlock.Text = "目前图片： " + fileList[count].Name;
                 OutputTextBlock.Tag = fileList[count].DisplayName;
                 count++;
-                return true;
+                CropRegion.Visibility = Visibility.Visible;
+                setCropRegionDefaultSize();
             }
             else
             {
+                noMoreImage = true;
                 CropRegion.Visibility = Visibility.Collapsed;
-                return false;
             }
-            
         }
 
-        private void Grid_PointerMoved(object sender, PointerRoutedEventArgs e)
+        private void Canvas_PointerMoved(object sender, PointerRoutedEventArgs e)
         {
-            Windows.UI.Xaml.Input.Pointer ptr = e.Pointer;
+            Pointer ptr = e.Pointer;
             if (ptr.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse)
             {
                 // To get mouse state, we need extended pointer details.
                 // We get the pointer info through the getCurrentPoint method
-                // of the event argument. 
-               
-                Windows.UI.Input.PointerPoint ptrPt = e.GetCurrentPoint(ContentGrid);
-                 Canvas.SetLeft(CropRegion, Math.Min(ptrPt.Position.X, handGesture.ActualWidth));
-                 Canvas.SetTop(CropRegion, Math.Min(ptrPt.Position.Y, handGesture.ActualHeight));
-            }        
+                // of the event argument.
+
+                Windows.UI.Input.PointerPoint ptrPt = e.GetCurrentPoint(ContentCanvas);
+                Canvas.SetLeft(CropRegion, Math.Min(ptrPt.Position.X, handGesture.ActualWidth));
+                Canvas.SetTop(CropRegion, Math.Min(ptrPt.Position.Y, handGesture.ActualHeight));
+            }
         }
 
-        private void ContentGrid_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
+        private void ContentCanvas_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
         {
-            var ptr = e.GetCurrentPoint(ContentGrid);
+            var ptr = e.GetCurrentPoint(ContentCanvas);
             if (e.Pointer.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse)
             {
-                var deltaLength=ptr.Properties.MouseWheelDelta;
-                if (CropRegion.Width + deltaLength/8>0)
+                var deltaLength = ptr.Properties.MouseWheelDelta / 12;  //120 per delta
+
+               uint newWidth = (uint)(cropRegionWidth + deltaLength * widthRatio);
+                var newHeight = (uint)(cropRegionHeight + deltaLength * heightRatio);
+                if ( newWidth > 0 && newHeight > 0)
                 {
-                    CropRegion.Width += deltaLength/8;
-                    CropRegion.Height += deltaLength/8;
+                    cropRegionWidth = newWidth;
+                    cropRegionHeight = newHeight;
+                    setCropRegionScaledSize();
                 }
             }
+        }
+
+        private void CropOption_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CropOption.SelectedIndex == 0)
+            {
+                FixedRatioOption.Visibility = Visibility.Visible;
+                FixedSizeOption.Visibility = Visibility.Collapsed;                
+            }
+            else
+            {                
+                FixedRatioOption.Visibility = Visibility.Collapsed;
+                FixedSizeOption.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void setCropRegionDefaultSize()
+        {            
+            if (CropOption.SelectedIndex == 0)
+            {
+                widthRatio = uint.Parse(WidthRationTextBox.Text);
+                heightRatio = uint.Parse(HeightRationTextBox.Text);
+
+                cropRegionWidth = uint.Parse(DefaultCropRegionLength.Text);
+                cropRegionHeight = (uint)CropRegion.Width/widthRatio*heightRatio;
+            }
+            else
+            {
+                cropRegionWidth = uint.Parse(CropRegionWidth.Text);
+                cropRegionHeight = uint.Parse(CropRegionHeight.Text);
+            }
+            setCropRegionScaledSize();
+        }
+
+        private void setCropRegionScaledSize()
+        {
+            CropRegion.Width = cropRegionWidth / imageScale;
+            CropRegion.Height = cropRegionHeight / imageScale;
         }
     }
 }
