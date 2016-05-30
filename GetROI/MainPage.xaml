@@ -16,8 +16,8 @@
             <StackPanel Margin="10,50,10,15" Orientation="Vertical">
                 <TextBlock Margin="0,50,0,10" FontSize="24">截图选项：</TextBlock>
                 <ComboBox x:Name="CropOption" FontSize="20" PlaceholderText="请选择" SelectionChanged="CropOption_SelectionChanged">
-                    <ComboBoxItem Content="固定比例"/>
-                    <ComboBoxItem Content="固定大小"/>
+                    <ComboBoxItem Content="固定比例" />
+                    <ComboBoxItem Content="固定大小" />
                 </ComboBox>
 
                 <Grid x:Name="FixedRatioOption" Margin="0,30,0,10" Visibility="Collapsed">
@@ -34,7 +34,8 @@
                             <ColumnDefinition Width="auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock VerticalAlignment="Center" FontSize="20">初始长度：</TextBlock>
-                        <TextBox x:Name="DefaultCropRegionLength" Grid.Column="1" FontSize="20" InputScope="Number" Text="160"></TextBox>
+                        <TextBox x:Name="DefaultCropRegionLength" Grid.Column="1" FontSize="20" 
+                                 InputScope="Number" Text="160" TextChanged="CropRegionSizeInfo_TextChanged"></TextBox>
                         <TextBlock Grid.Column="2" VerticalAlignment="Bottom" FontSize="20">px</TextBlock>
                     </Grid>
 
@@ -46,11 +47,13 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <TextBlock VerticalAlignment="Center" FontSize="20">长：高 =</TextBlock>
-                        <TextBox x:Name="WidthRationTextBox" Grid.Column="1" FontSize="20" InputScope="Number" Text="1"></TextBox>
+                        <TextBox x:Name="WidthRationTextBox" Grid.Column="1" FontSize="20" InputScope="Number" 
+                                 Text="1" TextChanged="CropRegionSizeInfo_TextChanged"></TextBox>
                         <TextBlock Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20" FontWeight="Bold">:</TextBlock>
-                        <TextBox x:Name="HeightRationTextBox" Grid.Column="3" FontSize="20" InputScope="Number" Text="1"></TextBox>
+                        <TextBox x:Name="HeightRationTextBox" Grid.Column="3" FontSize="20" InputScope="Number" Text="1"
+                                 TextChanged="CropRegionSizeInfo_TextChanged"></TextBox>
                     </Grid>
-                    
+
                     <Grid Grid.Row="2" Margin="0,10,0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="auto" />
@@ -58,24 +61,26 @@
                             <ColumnDefinition Width="auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock VerticalAlignment="Center" FontSize="20">单位递增：</TextBlock>
-                        <TextBox x:Name="WheelIncrementTextBox" Grid.Column="1" FontSize="20" InputScope="Number" Text="160"></TextBox>
+                        <TextBox x:Name="WheelIncrementTextBox" Grid.Column="1" FontSize="20" InputScope="Number" Text="160" TextChanged="WheelIncrementTextBox_TextChanged"></TextBox>
                         <TextBlock Grid.Column="2" VerticalAlignment="Bottom" FontSize="20">px</TextBlock>
                     </Grid>
                 </Grid>
 
-                <Grid x:Name="FixedSizeOption" Margin="0,50,0,10">
+                <Grid x:Name="FixedSizeOption" Margin="0,50,0,10" Visibility="Collapsed">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="15" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBox x:Name="CropRegionWidth" FontSize="20" InputScope="Number" Text="160"></TextBox>
+                    <TextBox x:Name="CropRegionWidth" FontSize="20" InputScope="Number" Text="160"
+                             TextChanged="CropRegionSizeInfo_TextChanged"></TextBox>
                     <TextBlock Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20" FontWeight="Bold">X</TextBlock>
-                    <TextBox x:Name="CropRegionHeight" Grid.Column="2" FontSize="20" InputScope="Number" Text="160"></TextBox>
+                    <TextBox x:Name="CropRegionHeight" Grid.Column="2" FontSize="20" InputScope="Number" Text="160"
+                             TextChanged="CropRegionSizeInfo_TextChanged"></TextBox>
                     <TextBlock Grid.Column="3" VerticalAlignment="Bottom" FontSize="20">px</TextBlock>
                 </Grid>
-                
+
                 <Button Margin="0,80,0,0" HorizontalAlignment="Center" BorderThickness="0" Background="#FF889BAE"
                         FontSize="24" Click="OpenPictureButton_Click">选择图片所在文件夹</Button>
             </StackPanel>
@@ -103,14 +108,16 @@
                 <TextBlock Style="{StaticResource TipTextStyle}">4. 截图时，左键点击为截图并跳到下一张图片；右键点击为跳过当前图片。</TextBlock>
             </StackPanel>
 
-            <Canvas x:Name="ContentCanvas" PointerMoved="Canvas_PointerMoved" PointerWheelChanged="ContentCanvas_PointerWheelChanged" PointerPressed="NextImage_Click" >
-                <Grid>
-                    <Image Canvas.ZIndex="1" x:Name="handGesture" MaxHeight="{Binding ElementName=ContentCanvas,Path=ActualHeight}"
-                           MaxWidth="{Binding ElementName=ContentCanvas,Path=ActualWidth}" Source="ms-appx:///Assets/cropLogo.scale-180.png" Stretch="None" />
-                </Grid>
-                <Rectangle Canvas.ZIndex="2" x:Name="CropRegion" Width="160" Height="160" Fill="BlueViolet"  Opacity="0.2" Stroke="Black" Visibility="Collapsed" />
-            </Canvas>
- 
+            <Grid x:Name="ImageGrid">
+                <Canvas x:Name="ContentCanvas" PointerMoved="Canvas_PointerMoved" PointerWheelChanged="ContentCanvas_PointerWheelChanged" PointerPressed="NextImage_Click">
+                    <Grid>
+                        <Image x:Name="handGesture" Canvas.ZIndex="1" MaxHeight="{Binding ElementName=ImageGrid,Path=ActualHeight}"
+                               MaxWidth="{Binding ElementName=ImageGrid,Path=ActualWidth}" />
+                    </Grid>
+                    <Rectangle Canvas.ZIndex="2" x:Name="CropRegion" Fill="BlueViolet"  Opacity="0.2" Stroke="Black" Visibility="Collapsed" />
+                </Canvas>
+            </Grid>
+
             <Grid Grid.Row="1">
                 <TextBlock x:Name="OutputTextBlock" HorizontalAlignment="Right" FontSize="32" VerticalAlignment="Center">左击截图，右击跳过，滚轮调选框大小</TextBlock>
             </Grid>

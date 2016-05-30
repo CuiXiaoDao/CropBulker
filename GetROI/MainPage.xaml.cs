@@ -22,8 +22,8 @@ namespace GetROI
     {
         private IReadOnlyList<StorageFile> fileList;
         private int count, totalImageNumber;
-        private uint cropRegionWidth, cropRegionHeight, widthRatio, heightRatio;
-        private double imageScale=1;
+        private uint cropRegionWidth, cropRegionHeight, widthRatio, heightRatio, wheelIncrement;
+        private double imageScale = 1;
         private bool noMoreImage;
         private StorageFolder clippedFolder;
 
@@ -48,9 +48,16 @@ namespace GetROI
                 clippedFolder = await KnownFolders.PicturesLibrary.CreateFolderAsync("Cliped" + folder.DisplayName, CreationCollisionOption.GenerateUniqueName);
                 fileList = await folder.GetFilesAsync();
                 totalImageNumber = fileList.Count;
-                count = 0;
+                count = 0;                
+                //getDefaultCropRegionSize();
                 await GotoNextHandGesture();
             }
+        }
+
+        private async void notifyUser(string str)
+        {
+            var message = new Windows.UI.Popups.MessageDialog(str);
+            await message.ShowAsync();
         }
 
         private async void NextImage_Click(object sender, PointerRoutedEventArgs e)
@@ -105,7 +112,6 @@ namespace GetROI
                 using (IRandomAccessStream newImgFileStream = await newImageFile.OpenAsync(FileAccessMode.ReadWrite))
                 {
                     // Create a bitmap encoder
-
                     BitmapEncoder bmpEncoder = await BitmapEncoder.CreateAsync(
                         BitmapEncoder.JpegEncoderId,
                         newImgFileStream);
@@ -159,11 +165,11 @@ namespace GetROI
                     BitmapImage handPicture = new BitmapImage();
                     handPicture.SetSource(imageStream);
                     handGesture.Source = handPicture;
-                    
-                    if(handPicture.PixelHeight > ContentCanvas.ActualHeight || handPicture.PixelWidth > ContentCanvas.ActualWidth)
+
+                    if (handPicture.PixelHeight > ImageGrid.ActualHeight || handPicture.PixelWidth > ImageGrid.ActualWidth)
                     {
-                        imageScale = Math.Max(handPicture.PixelHeight / ContentCanvas.ActualHeight, 
-                            handPicture.PixelWidth / ContentCanvas.ActualWidth);
+                        imageScale = Math.Max(handPicture.PixelHeight / ImageGrid.ActualHeight,
+                            handPicture.PixelWidth / ImageGrid.ActualWidth);
                         handGesture.Stretch = Windows.UI.Xaml.Media.Stretch.Uniform;
                     }
                     else
@@ -171,14 +177,15 @@ namespace GetROI
                         imageScale = 1;
                         handGesture.Stretch = Windows.UI.Xaml.Media.Stretch.None;
                     }
-
+                    ContentCanvas.Height = handPicture.PixelHeight / imageScale;
+                    ContentCanvas.Width = handPicture.PixelWidth / imageScale;
                 }
 
                 OutputTextBlock.Text = "目前图片： " + fileList[count].Name;
                 OutputTextBlock.Tag = fileList[count].DisplayName;
                 count++;
                 CropRegion.Visibility = Visibility.Visible;
-                setCropRegionDefaultSize();
+                setCropRegionScaledSize();
             }
             else
             {
@@ -195,24 +202,37 @@ namespace GetROI
                 // To get mouse state, we need extended pointer details.
                 // We get the pointer info through the getCurrentPoint method
                 // of the event argument.
-
                 Windows.UI.Input.PointerPoint ptrPt = e.GetCurrentPoint(ContentCanvas);
-                Canvas.SetLeft(CropRegion, Math.Min(ptrPt.Position.X, handGesture.ActualWidth));
-                Canvas.SetTop(CropRegion, Math.Min(ptrPt.Position.Y, handGesture.ActualHeight));
+                double newLeft = ptrPt.Position.X - 0.5 * CropRegion.ActualWidth;
+                double newTop = ptrPt.Position.Y - 0.5 * CropRegion.ActualHeight;
+
+                Canvas.SetLeft(CropRegion, Math.Min(Math.Max(newLeft,0), handGesture.ActualWidth - CropRegion.ActualWidth));
+                Canvas.SetTop(CropRegion, Math.Min(Math.Max(newTop, 0), handGesture.ActualHeight - CropRegion.ActualHeight));
             }
+        }
+
+        private void CropRegionSizeInfo_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            getDefaultCropRegionSize();
+            setCropRegionScaledSize();
+        }
+
+        private void WheelIncrementTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            wheelIncrement = uint.Parse(WheelIncrementTextBox.Text);
         }
 
         private void ContentCanvas_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
         {
             var ptr = e.GetCurrentPoint(ContentCanvas);
             if (e.Pointer.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse)
-            {
-                var deltaLength = ptr.Properties.MouseWheelDelta / 12;  //120 per delta
+            {                
+                var deltaLength = ptr.Properties.MouseWheelDelta / 120 * wheelIncrement;  //120 per delta
 
-               uint newWidth = (uint)(cropRegionWidth + deltaLength * widthRatio);
+                uint newWidth = (uint)(cropRegionWidth + deltaLength * widthRatio);
                 var newHeight = (uint)(cropRegionHeight + deltaLength * heightRatio);
-                if ( newWidth > 0 && newHeight > 0)
-                {
+                if (newWidth > 0 && newHeight > 0 )
+                {                   
                     cropRegionWidth = newWidth;
                     cropRegionHeight = newHeight;
                     setCropRegionScaledSize();
@@ -225,31 +245,32 @@ namespace GetROI
             if (CropOption.SelectedIndex == 0)
             {
                 FixedRatioOption.Visibility = Visibility.Visible;
-                FixedSizeOption.Visibility = Visibility.Collapsed;                
+                FixedSizeOption.Visibility = Visibility.Collapsed;
+                wheelIncrement = uint.Parse(WheelIncrementTextBox.Text);
             }
             else
-            {                
+            {
                 FixedRatioOption.Visibility = Visibility.Collapsed;
                 FixedSizeOption.Visibility = Visibility.Visible;
             }
+            getDefaultCropRegionSize();
         }
 
-        private void setCropRegionDefaultSize()
-        {            
+        private void getDefaultCropRegionSize()
+        {
             if (CropOption.SelectedIndex == 0)
             {
                 widthRatio = uint.Parse(WidthRationTextBox.Text);
                 heightRatio = uint.Parse(HeightRationTextBox.Text);
 
                 cropRegionWidth = uint.Parse(DefaultCropRegionLength.Text);
-                cropRegionHeight = (uint)CropRegion.Width/widthRatio*heightRatio;
+                cropRegionHeight = (uint)(cropRegionWidth / widthRatio * heightRatio);
             }
             else
             {
                 cropRegionWidth = uint.Parse(CropRegionWidth.Text);
                 cropRegionHeight = uint.Parse(CropRegionHeight.Text);
-            }
-            setCropRegionScaledSize();
+            }            
         }
 
         private void setCropRegionScaledSize()
