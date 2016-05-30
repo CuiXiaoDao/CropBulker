@@ -61,7 +61,7 @@
                             <ColumnDefinition Width="auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock VerticalAlignment="Center" FontSize="20">单位递增：</TextBlock>
-                        <TextBox x:Name="WheelIncrementTextBox" Grid.Column="1" FontSize="20" InputScope="Number" Text="160" TextChanged="WheelIncrementTextBox_TextChanged"></TextBox>
+                        <TextBox x:Name="WheelIncrementTextBox" Grid.Column="1" FontSize="20" InputScope="Number" Text="20" TextChanged="WheelIncrementTextBox_TextChanged"></TextBox>
                         <TextBlock Grid.Column="2" VerticalAlignment="Bottom" FontSize="20">px</TextBlock>
                     </Grid>
                 </Grid>
@@ -104,22 +104,23 @@
                 <TextBlock Style="{StaticResource TipTextStyle}" FontSize="32" FontWeight="Bold">帮助</TextBlock>
                 <TextBlock Style="{StaticResource TipTextStyle}">1. 选择固定比例截图还是固定大小截图</TextBlock>
                 <TextBlock Style="{StaticResource TipTextStyle}">2. 若为固定比例截图，输入长、高比和默认长度，截图过程中可通过鼠标滚轮在默认长度的基础上按比例调整大小；若为固定大小，输入截图大小。</TextBlock>
-                <TextBlock Style="{StaticResource TipTextStyle}">3. 选择所有需要批量截图的文件夹，目前不支持目录下的子文件夹，支持jpg、jpeg、png、bmp格式图片</TextBlock>
+                <TextBlock Style="{StaticResource TipTextStyle}">3. 选择所有需要批量截图的文件夹，目前不支持目录下的子文件夹，支持jpg、jpeg、png、bmp、ico、gif等格式的图片</TextBlock>
                 <TextBlock Style="{StaticResource TipTextStyle}">4. 截图时，左键点击为截图并跳到下一张图片；右键点击为跳过当前图片。</TextBlock>
             </StackPanel>
 
             <Grid x:Name="ImageGrid">
-                <Canvas x:Name="ContentCanvas" PointerMoved="Canvas_PointerMoved" PointerWheelChanged="ContentCanvas_PointerWheelChanged" PointerPressed="NextImage_Click">
+                <Canvas x:Name="ContentCanvas" PointerMoved="Canvas_PointerMoved" PointerPressed="NextImage_Click">
                     <Grid>
                         <Image x:Name="handGesture" Canvas.ZIndex="1" MaxHeight="{Binding ElementName=ImageGrid,Path=ActualHeight}"
                                MaxWidth="{Binding ElementName=ImageGrid,Path=ActualWidth}" />
                     </Grid>
-                    <Rectangle Canvas.ZIndex="2" x:Name="CropRegion" Fill="BlueViolet"  Opacity="0.2" Stroke="Black" Visibility="Collapsed" />
+                    <Rectangle Canvas.ZIndex="2" x:Name="CropRegion" Fill="White"  Opacity="0.4" Visibility="Collapsed" />
                 </Canvas>
             </Grid>
 
             <Grid Grid.Row="1">
-                <TextBlock x:Name="OutputTextBlock" HorizontalAlignment="Right" FontSize="32" VerticalAlignment="Center">左击截图，右击跳过，滚轮调选框大小</TextBlock>
+                <TextBlock x:Name="OutputTextBlock" HorizontalAlignment="Right" FontSize="32" 
+                           VerticalAlignment="Center">左击截图，右击跳过，滚轮调选框大小</TextBlock>
             </Grid>
         </Grid>
     </Grid>
