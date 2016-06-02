@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
@@ -25,9 +24,11 @@ namespace GetROI
         private int count, totalImageNumber;
         private uint cropRegionWidth, cropRegionHeight, wheelIncrement;
         private uint widthRatio = 1, heightRatio = 1;
-        private double imageScale=1;        
+        private double imageScale = 1;
         private List<string> supportedFileType = new List<string> { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".ico" };
         private StorageFolder clippedFolder;
+        private Rect outerRect = new Rect(0, 0, 100, 100);
+        private Rect selectedRect = new Rect(0, 0, 10, 10);
 
         public MainPage()
         {
@@ -38,7 +39,7 @@ namespace GetROI
         {
             // Clear previous returned folder name, if it exists, between iterations of this scenario
             FolderPicker folderPicker = new FolderPicker();
-            folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;            
+            folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
             folderPicker.FileTypeFilter.Add(".png");
             folderPicker.FileTypeFilter.Add(".jpg");
             folderPicker.FileTypeFilter.Add(".jpeg");
@@ -47,8 +48,7 @@ namespace GetROI
 
             if (folder != null)
             {
-                
-                clippedFolder = await KnownFolders.PicturesLibrary.CreateFolderAsync("Cliped" + 
+                clippedFolder = await KnownFolders.PicturesLibrary.CreateFolderAsync("Cliped" +
                     folder.DisplayName, CreationCollisionOption.GenerateUniqueName);
 
                 imageList = new List<StorageFile>();
@@ -63,15 +63,15 @@ namespace GetROI
                 count = 0;
                 totalImageNumber = imageList.Count;
 
-                if (totalImageNumber>0)
+                if (totalImageNumber > 0)
                 {
                     await GotoNextHandGesture();
-                    CropRegion.Visibility = Visibility.Visible;
+                    SelectionLayer.Visibility = Visibility.Visible;
                 }
                 else
                 {
                     await notifyUser("所选择文件夹中未找到图片");
-                }               
+                }
             }
         }
 
@@ -85,7 +85,7 @@ namespace GetROI
         {
             count++;
             var ptr = e.GetCurrentPoint(ContentCanvas);
-            if (count<=totalImageNumber && ptr.Properties.IsLeftButtonPressed)
+            if (count <= totalImageNumber && ptr.Properties.IsLeftButtonPressed)
             {
                 await SaveCroppedBitmapAsync();
             }
@@ -93,21 +93,19 @@ namespace GetROI
             if (count < totalImageNumber)//判断有误剩余图片
             {
                 await GotoNextHandGesture();
-            }                       
+            }
             else
             {
-                CropRegion.Visibility = Visibility.Collapsed;
+                SelectionLayer.Visibility = Visibility.Collapsed;
                 OutputTextBlock.Text = "未选择图片所在文件夹或所选文件夹中图片已经全部截图";
-            }        
+            }
         }
 
         private async Task SaveCroppedBitmapAsync()
         {
-            Point p = CropRegion.TransformToVisual(ContentCanvas).TransformPoint(new Point(0, 0));
-
             // Convert start point and size to integer.
-            uint startPointX = (uint)Math.Floor(p.X * imageScale);
-            uint startPointY = (uint)Math.Floor(p.Y * imageScale);
+            uint startPointX = (uint)Math.Floor(selectedRect.X * imageScale);
+            uint startPointY = (uint)Math.Floor(selectedRect.Y * imageScale);
 
             StorageFile originalImageFile = imageList[count - 1];
             StorageFile newImageFile = await clippedFolder.CreateFileAsync(OutputTextBlock.Tag.ToString() + ".jpg", CreationCollisionOption.GenerateUniqueName);
@@ -182,7 +180,6 @@ namespace GetROI
 
         private async Task GotoNextHandGesture()
         {
-
             using (IRandomAccessStream imageStream = await imageList[count].OpenReadAsync())
             {
                 BitmapImage handPicture = new BitmapImage();
@@ -200,14 +197,15 @@ namespace GetROI
                     imageScale = 1;
                     handGesture.Stretch = Windows.UI.Xaml.Media.Stretch.None;
                 }
-                ContentCanvas.Height = handPicture.PixelHeight / imageScale;
-                ContentCanvas.Width = handPicture.PixelWidth / imageScale;
+
+                ContentCanvas.Height = outerRect.Height = handPicture.PixelHeight / imageScale;
+                ContentCanvas.Width = outerRect.Width = handPicture.PixelWidth / imageScale;
+                OuterRect.Rect = outerRect;
             }
 
             OutputTextBlock.Text = "目前图片： " + imageList[count].Name;
-            OutputTextBlock.Tag = imageList[count].DisplayName;           
+            OutputTextBlock.Tag = imageList[count].DisplayName;
             setCropRegionScaledSize();
-           
         }
 
         private void Canvas_PointerMoved(object sender, PointerRoutedEventArgs e)
@@ -219,11 +217,12 @@ namespace GetROI
                 // We get the pointer info through the getCurrentPoint method
                 // of the event argument.
                 Windows.UI.Input.PointerPoint ptrPt = e.GetCurrentPoint(ContentCanvas);
-                double newLeft = ptrPt.Position.X - 0.5 * CropRegion.ActualWidth;
-                double newTop = ptrPt.Position.Y - 0.5 * CropRegion.ActualHeight;
+                double newLeft = ptrPt.Position.X - 0.5 * selectedRect.Width;
+                double newTop = ptrPt.Position.Y - 0.5 * selectedRect.Height;
 
-                Canvas.SetLeft(CropRegion, Math.Min(Math.Max(newLeft, 0), handGesture.ActualWidth - CropRegion.ActualWidth));
-                Canvas.SetTop(CropRegion, Math.Min(Math.Max(newTop, 0), handGesture.ActualHeight - CropRegion.ActualHeight));
+                selectedRect.X = Math.Min(Math.Max(newLeft, 0), handGesture.ActualWidth - selectedRect.Width);
+                selectedRect.Y = Math.Min(Math.Max(newTop, 0), handGesture.ActualWidth - selectedRect.Height);
+                SelectedRect.Rect = selectedRect;
             }
         }
 
@@ -238,7 +237,7 @@ namespace GetROI
             wheelIncrement = uint.Parse(WheelIncrementTextBox.Text);
         }
 
-        //PointerWheelChanged="ContentCanvas_PointerWheelChanged" 
+        //PointerWheelChanged="ContentCanvas_PointerWheelChanged"
         private void CropOption_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (CropOption.SelectedIndex == 0)
@@ -295,8 +294,9 @@ namespace GetROI
 
         private void setCropRegionScaledSize()
         {
-            CropRegion.Width = cropRegionWidth / imageScale;
-            CropRegion.Height = cropRegionHeight / imageScale;
+            selectedRect.Width = cropRegionWidth / imageScale;
+            selectedRect.Height = cropRegionHeight / imageScale;
+            SelectedRect.Rect = selectedRect;
         }
     }
 }

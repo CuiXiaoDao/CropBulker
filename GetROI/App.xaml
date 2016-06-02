@@ -7,5 +7,6 @@
     <Application.Resources>
         <SolidColorBrush x:Key="ContentBackground" Color="#1F1F1F"></SolidColorBrush>
         <SolidColorBrush x:Key="IndexBackground" Color="#333333"></SolidColorBrush>
+        <SolidColorBrush x:Key="NonSelectedBackground" Color="#99000000" />
     </Application.Resources>
 </Application>

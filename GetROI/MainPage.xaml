@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:GetROI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"   
     mc:Ignorable="d">
 
     <Grid>
@@ -114,7 +114,15 @@
                         <Image x:Name="handGesture" Canvas.ZIndex="1" MaxHeight="{Binding ElementName=ImageGrid,Path=ActualHeight}"
                                MaxWidth="{Binding ElementName=ImageGrid,Path=ActualWidth}" />
                     </Grid>
-                    <Rectangle Canvas.ZIndex="2" x:Name="CropRegion" Fill="White"  Opacity="0.4" Visibility="Collapsed" />
+
+                    <Path x:Name="SelectionLayer" Canvas.ZIndex="2"  Fill="{StaticResource NonSelectedBackground}"  Opacity="0.7" Visibility="Collapsed">
+                        <Path.Data>
+                            <GeometryGroup>
+                                <RectangleGeometry x:Name="OuterRect" />
+                                <RectangleGeometry x:Name="SelectedRect" />
+                            </GeometryGroup>
+                        </Path.Data>
+                    </Path>
                 </Canvas>
             </Grid>
 
