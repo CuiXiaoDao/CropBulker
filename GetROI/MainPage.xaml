@@ -4,20 +4,20 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:GetROI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"   
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="300" />
+            <ColumnDefinition Width="auto" />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
         <Grid Background="{StaticResource IndexBackground}">
             <StackPanel Margin="10,50,10,15" Orientation="Vertical">
-                <TextBlock Margin="0,50,0,10" FontSize="24">截图选项：</TextBlock>
-                <ComboBox x:Name="CropOption" FontSize="20" PlaceholderText="请选择" SelectionChanged="CropOption_SelectionChanged">
-                    <ComboBoxItem Content="固定比例" />
-                    <ComboBoxItem Content="固定大小" />
+                <TextBlock x:Uid="CropOption" Margin="0,50,0,10" FontSize="24">截图选项：</TextBlock>
+                <ComboBox x:Uid="PleaseChoose" x:Name="CropOption" FontSize="20" PlaceholderText="请选择" SelectionChanged="CropOption_SelectionChanged">
+                    <ComboBoxItem x:Uid="FixedRatio" Content="固定比例" />
+                    <ComboBoxItem x:Uid="FixedSize" Content="固定大小" />
                 </ComboBox>
 
                 <Grid x:Name="FixedRatioOption" Margin="0,30,0,10" Visibility="Collapsed">
@@ -33,9 +33,9 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" FontSize="20">初始长度：</TextBlock>
-                        <TextBox x:Name="DefaultCropRegionLength" Grid.Column="1" FontSize="20" 
-                                 InputScope="Number" Text="160" TextChanged="CropRegionSizeInfo_TextChanged"></TextBox>
+                        <TextBlock x:Uid="InitialLength" VerticalAlignment="Center" FontSize="20">初始长度：</TextBlock>
+                        <TextBox x:Name="DefaultCropRegionLength" Grid.Column="1" FontSize="20"
+                                 InputScope="Number" Text="40" TextChanged="CropRegionSizeInfo_TextChanged"></TextBox>
                         <TextBlock Grid.Column="2" VerticalAlignment="Bottom" FontSize="20">px</TextBlock>
                     </Grid>
 
@@ -46,8 +46,8 @@
                             <ColumnDefinition Width="20" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" FontSize="20">长：高 =</TextBlock>
-                        <TextBox x:Name="WidthRationTextBox" Grid.Column="1" FontSize="20" InputScope="Number" 
+                        <TextBlock x:Uid="Ratio" VerticalAlignment="Center" FontSize="20">长：高 =</TextBlock>
+                        <TextBox x:Name="WidthRationTextBox" Grid.Column="1" FontSize="20" InputScope="Number"
                                  Text="1" TextChanged="CropRegionSizeInfo_TextChanged"></TextBox>
                         <TextBlock Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20" FontWeight="Bold">:</TextBlock>
                         <TextBox x:Name="HeightRationTextBox" Grid.Column="3" FontSize="20" InputScope="Number" Text="1"
@@ -60,8 +60,8 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" FontSize="20">单位递增：</TextBlock>
-                        <TextBox x:Name="WheelIncrementTextBox" Grid.Column="1" FontSize="20" InputScope="Number" Text="20" TextChanged="WheelIncrementTextBox_TextChanged"></TextBox>
+                        <TextBlock x:Uid="Increment" VerticalAlignment="Center" FontSize="20">单位递增：</TextBlock>
+                        <TextBox x:Name="WheelIncrementTextBox" Grid.Column="1" FontSize="20" InputScope="Number" Text="10" TextChanged="WheelIncrementTextBox_TextChanged"></TextBox>
                         <TextBlock Grid.Column="2" VerticalAlignment="Bottom" FontSize="20">px</TextBlock>
                     </Grid>
                 </Grid>
@@ -73,16 +73,16 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBox x:Name="CropRegionWidth" FontSize="20" InputScope="Number" Text="160"
+                    <TextBox x:Name="CropRegionWidth" FontSize="20" InputScope="Number" Text="40"
                              TextChanged="CropRegionSizeInfo_TextChanged"></TextBox>
                     <TextBlock Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20" FontWeight="Bold">X</TextBlock>
-                    <TextBox x:Name="CropRegionHeight" Grid.Column="2" FontSize="20" InputScope="Number" Text="160"
+                    <TextBox x:Name="CropRegionHeight" Grid.Column="2" FontSize="20" InputScope="Number" Text="40"
                              TextChanged="CropRegionSizeInfo_TextChanged"></TextBox>
                     <TextBlock Grid.Column="3" VerticalAlignment="Bottom" FontSize="20">px</TextBlock>
                 </Grid>
 
-                <Button Margin="0,80,0,0" HorizontalAlignment="Center" BorderThickness="0" Background="#FF889BAE"
-                        FontSize="24" Click="OpenPictureButton_Click">选择图片所在文件夹</Button>
+                <Button x:Uid="ChooseFolder" Margin="0,80,0,0" HorizontalAlignment="Center" BorderThickness="0" Background="#FF889BAE"
+                        FontSize="24" Click="OpenPictureButton_Click" Content="选择图片文件夹"></Button>
             </StackPanel>
         </Grid>
 
@@ -93,7 +93,7 @@
             </Grid.RowDefinitions>
             <StackPanel x:Name="Tips"  Margin="50,50,20,20" Orientation="Vertical">
                 <StackPanel.Resources>
-                    <Style TargetType="TextBlock" x:Name="TipTextStyle">
+                    <Style TargetType="TextBlock" x:Key="TipTextStyle">
                         <Setter Property="FontSize" Value="28" />
                         <Setter Property="TextWrapping" Value="Wrap" />
                         <Setter Property="HorizontalAlignment" Value="Left" />
@@ -101,15 +101,17 @@
                         <Setter Property="Margin" Value="0,20,0,10" />
                     </Style>
                 </StackPanel.Resources>
-                <TextBlock Style="{StaticResource TipTextStyle}" FontSize="32" FontWeight="Bold">帮助</TextBlock>
-                <TextBlock Style="{StaticResource TipTextStyle}">1. 选择固定比例截图还是固定大小截图</TextBlock>
-                <TextBlock Style="{StaticResource TipTextStyle}">2. 若为固定比例截图，输入长、高比和默认长度，截图过程中可通过鼠标滚轮在默认长度的基础上按比例调整大小；若为固定大小，输入截图大小。</TextBlock>
-                <TextBlock Style="{StaticResource TipTextStyle}">3. 选择所有需要批量截图的文件夹，目前不支持目录下的子文件夹，支持jpg、jpeg、png、bmp、ico、gif等格式的图片</TextBlock>
-                <TextBlock Style="{StaticResource TipTextStyle}">4. 截图时，左键点击为截图并跳到下一张图片；右键点击为跳过当前图片。</TextBlock>
+                <TextBlock x:Uid="Help" Style="{StaticResource TipTextStyle}" FontSize="32" FontWeight="Bold">帮助</TextBlock>
+                <TextBlock x:Uid="Tip1" Style="{StaticResource TipTextStyle}">1. 选择截图方式，固定比例或固定大小。</TextBlock>
+                <TextBlock x:Uid="Tip2" Style="{StaticResource TipTextStyle}">2. 固定比例方式：输入长、高比，初始长度；固定大小方式：输入截图大小。</TextBlock>
+                <TextBlock x:Uid="Tip3" Style="{StaticResource TipTextStyle}">3. 选择图片所在文件夹，文件夹中的图片（不包括子文件夹中的图片）将进行截图，支持jpg、jpeg、png、bmp、ico、gif等格式的图片。</TextBlock>
+                <TextBlock x:Uid="Tip4" Style="{StaticResource TipTextStyle}">4. 截图存放在本地图片库下以“cliped"开头的文件夹中。</TextBlock>
+                <TextBlock x:Uid="Tip5" Style="{StaticResource TipTextStyle}">5. 截图时，左键点击为截图并跳到下一张图片；右键点击为跳过当前图片；固定比例截图时可通过鼠标滚轮调整选框大小。</TextBlock>
+                <HyperlinkButton FontSize="18" NavigateUri="https://cuixiaodao.github.io/">Privacy Policy (acquired by Microsoft)</HyperlinkButton>
             </StackPanel>
 
             <Grid x:Name="ImageGrid">
-                <Canvas x:Name="ContentCanvas" PointerMoved="Canvas_PointerMoved" PointerPressed="NextImage_Click">
+                <Canvas x:Name="ContentCanvas" PointerMoved="ContentCanvas_PointerMoved" PointerPressed="NextImage_Click">
                     <Grid>
                         <Image x:Name="handGesture" Canvas.ZIndex="1" MaxHeight="{Binding ElementName=ImageGrid,Path=ActualHeight}"
                                MaxWidth="{Binding ElementName=ImageGrid,Path=ActualWidth}" />
@@ -126,10 +128,12 @@
                 </Canvas>
             </Grid>
 
-            <Grid Grid.Row="1">
-                <TextBlock x:Name="OutputTextBlock" HorizontalAlignment="Right" FontSize="32" 
-                           VerticalAlignment="Center">左击截图，右击跳过，滚轮调选框大小</TextBlock>
-            </Grid>
+            <StackPanel Grid.Row="1" Orientation="Horizontal">
+                <TextBlock x:Name="CurrentImageInfo" Margin="20,0,20,0" Foreground="LightGray"
+                    FontSize="24" VerticalAlignment="Center" ></TextBlock>
+                <TextBlock x:Name="CropInfoTextBlock" Margin="20,0,20,0" Foreground="LightGray"
+                    FontSize="24" VerticalAlignment="Center" TextWrapping="NoWrap"></TextBlock>
+            </StackPanel>
         </Grid>
     </Grid>
 </Page>

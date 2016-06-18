@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en-US" target-language="en-US" original="GETROI/STRINGS/ZH-CN/RESOURCES.RESW" tool-id="MultilingualAppToolkit" product-name="n/a" product-version="n/a" build-num="n/a">
+    <header>
+      <tool tool-id="MultilingualAppToolkit" tool-name="Multilingual App Toolkit" tool-version="4.0.1605.0" tool-company="Microsoft" />
+    </header>
+    <body>
+      <group id="GETROI/STRINGS/EN-US/RESOURCES.RESW" datatype="resx">
+        <trans-unit id="CropInfo" translate="yes" xml:space="preserve">
+          <source>Crop region size: {0} x {1}</source>
+          <target state="new">Crop region size: {0} x {1}</target>
+        </trans-unit>
+        <trans-unit id="CropOption.Text" translate="yes" xml:space="preserve">
+          <source>Crop options:</source>
+          <target state="new">Crop options:</target>
+        </trans-unit>
+        <trans-unit id="CurrentImageInfo" translate="yes" xml:space="preserve">
+          <source>Current picture: {0}</source>
+          <target state="new">Current picture: {0}</target>
+        </trans-unit>
+        <trans-unit id="FixedRatio.Content" translate="yes" xml:space="preserve">
+          <source>Fixed ratio</source>
+          <target state="new">Fixed ratio</target>
+        </trans-unit>
+        <trans-unit id="FixedSize.Content" translate="yes" xml:space="preserve">
+          <source>Fixed Size</source>
+          <target state="new">Fixed Size</target>
+        </trans-unit>
+        <trans-unit id="Help.Text" translate="yes" xml:space="preserve">
+          <source>Help</source>
+          <target state="new">Help</target>
+        </trans-unit>
+        <trans-unit id="Increment.Text" translate="yes" xml:space="preserve">
+          <source>Wheel Increment:</source>
+          <target state="new">Wheel Increment:</target>
+        </trans-unit>
+        <trans-unit id="InitialLength.Text" translate="yes" xml:space="preserve">
+          <source>Initial length:</source>
+          <target state="new">Initial length:</target>
+        </trans-unit>
+        <trans-unit id="NoImageFound" translate="yes" xml:space="preserve">
+          <source>Picture not found</source>
+          <target state="new">Picture not found</target>
+        </trans-unit>
+        <trans-unit id="NoMoreImage" translate="yes" xml:space="preserve">
+          <source>No folder selected or all pictures cropped</source>
+          <target state="new">No folder selected or all pictures cropped</target>
+        </trans-unit>
+        <trans-unit id="PleaseChoose.PlaceholderText" translate="yes" xml:space="preserve">
+          <source>Please choose</source>
+          <target state="new">Please choose</target>
+        </trans-unit>
+        <trans-unit id="Ratio.Text" translate="yes" xml:space="preserve">
+          <source>Length: high=</source>
+          <target state="new">Length: high=</target>
+        </trans-unit>
+        <trans-unit id="Tip1.Text" translate="yes" xml:space="preserve">
+          <source>1. Choose the crop option, fixed ratio, or fixed size.</source>
+          <target state="new">1. Choose the crop option, fixed ratio, or fixed size.</target>
+        </trans-unit>
+        <trans-unit id="Tip2.Text" translate="yes" xml:space="preserve">
+          <source>2. Fixed ratio: enter the ratio of length/height, and initial length; fixed size: enter the size.</source>
+          <target state="new">2. Fixed ratio: enter the ratio of length/height, and initial length; fixed size: enter the size.</target>
+        </trans-unit>
+        <trans-unit id="Tip3.Text" translate="yes" xml:space="preserve">
+          <source>3. Select the folder that contains all the pictures, pictures in the folder (not including pictures in subfolders) will be cropped. Support jpg, JPEG, PNG, and BMP, ICO, GIF format pictures.</source>
+          <target state="new">3. Select the folder that contains all the pictures, pictures in the folder (not including pictures in subfolders) will be cropped. Support jpg, JPEG, PNG, and BMP, ICO, GIF format pictures.</target>
+        </trans-unit>
+        <trans-unit id="Tip4.Text" translate="yes" xml:space="preserve">
+          <source>4. The cropped pictures stored in a directory named "clippedFolderName" under Pictures Library.</source>
+          <target state="new">4. The cropped pictures stored in a directory named "clippedFolderName" under Pictures Library.</target>
+        </trans-unit>
+        <trans-unit id="Tip5.Text" translate="yes" xml:space="preserve">
+          <source>5. when cropping, left click for crop, save and jump to the next picture; right click to skip the current picture; for fixed-ratio crop you can use the mouse wheel to adjust size.</source>
+          <target state="new">5. when cropping, left click for crop, save and jump to the next picture; right click to skip the current picture; for fixed-ratio crop you can use the mouse wheel to adjust size.</target>
+        </trans-unit>
+        <trans-unit id="ChooseFolder.Content" translate="yes" xml:space="preserve">
+          <source>Choose picture folder</source>
+          <target state="new">Choose picture folder</target>
+        </trans-unit>
+        <trans-unit id="DisplayName" translate="yes" xml:space="preserve">
+          <source>CropBulker</source>
+          <target state="new">CropBulker</target>
+        </trans-unit>
+      </group>
+    </body>
+  </file>
+</xliff>
